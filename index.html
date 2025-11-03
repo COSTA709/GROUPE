@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Private Group Selection</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        background: #f8f9fa;
+        margin: 0;
+        padding: 20px;
+      }
+      .card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        max-width: 450px;
+        padding: 25px;
+        margin: 40px auto;
+      }
+      h2 {
+        text-align: center;
+      }
+      label {
+        display: block;
+        margin-top: 12px;
+      }
+      input,
+      select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        margin-top: 4px;
+      }
+      button {
+        margin-top: 20px;
+        width: 100%;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 10px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      .hidden {
+        display: none;
+      }
+      .admin-table {
+        margin-top: 30px;
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        border: 1px solid #ccc;
+        padding: 8px;
+        text-align: center;
+      }
+      .link {
+        text-align: center;
+        margin-top: 20px;
+        color: #007bff;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card" id="formCard">
+      <h2>Group Selection</h2>
+      <form id="groupForm">
+        <label
+          >Name:
+          <input type="text" id="name" required />
+        </label>
+
+        <label
+          >Matricule (12 digits):
+          <input type="text" id="matricule" required />
+        </label>
+
+        <label
+          >Group:
+          <select id="group" required>
+            <option value="">-- Choose --</option>
+            <option value="G1">G1</option>
+            <option value="G2">G2</option>
+          </select>
+        </label>
+
+        <div id="miniGroupDiv" class="hidden">
+          <label
+            >Minigroup:
+            <select id="minigroup" required></select>
+          </label>
+        </div>
+
+        <button type="submit">Submit</button>
+      </form>
+      <p class="link" id="viewAdmin">View Admin Panel</p>
+    </div>
+
+    <div class="card hidden" id="adminCard">
+      <h2>Admin Panel</h2>
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Matricule</th>
+            <th>Group</th>
+            <th>Minigroup</th>
+          </tr>
+        </thead>
+        <tbody id="adminTableBody"></tbody>
+      </table>
+      <button id="clearData">Clear All Data</button>
+      <p class="link" id="backForm">⬅️ Back to Form</p>
+    </div>
+
+    <script>
+      const groupSelect = document.getElementById("group");
+      const miniDiv = document.getElementById("miniGroupDiv");
+      const miniSelect = document.getElementById("minigroup");
+
+      const groups = {
+        G1: ["G1-A", "G1-B", "G1-C"],
+        G2: ["G2-A", "G2-B", "G2-C"],
+      };
+
+      // Show mini-groups when group selected
+      groupSelect.addEventListener("change", () => {
+        const val = groupSelect.value;
+        if (!val) {
+          miniDiv.classList.add("hidden");
+          miniSelect.innerHTML = "";
+          return;
+        }
+        miniDiv.classList.remove("hidden");
+        miniSelect.innerHTML = groups[val]
+          .map((g) => `<option value="${g}">${g}</option>`)
+          .join("");
+      });
+
+      // Handle form submit
+      document.getElementById("groupForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const name = document.getElementById("name").value.trim();
+        const matricule = document.getElementById("matricule").value.trim();
+        const group = document.getElementById("group").value;
+        const minigroup = document.getElementById("minigroup").value;
+
+        const entry = { name, matricule, group, minigroup };
+        const data = JSON.parse(localStorage.getItem("submissions") || "[]");
+        data.push(entry);
+        localStorage.setItem("submissions", JSON.stringify(data));
+
+        alert("✅ Your choice has been saved!");
+        e.target.reset();
+        miniDiv.classList.add("hidden");
+      });
+
+      // Admin panel
+      const formCard = document.getElementById("formCard");
+      const adminCard = document.getElementById("adminCard");
+      const adminTable = document.getElementById("adminTableBody");
+
+      document.getElementById("viewAdmin").addEventListener("click", () => {
+        const pass = prompt("Enter admin key:");
+        if (pass !== "COSTASAMA12") return alert("❌ Wrong key!");
+        formCard.classList.add("hidden");
+        adminCard.classList.remove("hidden");
+        showAdminData();
+      });
+
+      document.getElementById("backForm").addEventListener("click", () => {
+        adminCard.classList.add("hidden");
+        formCard.classList.remove("hidden");
+      });
+
+      function showAdminData() {
+        const data = JSON.parse(localStorage.getItem("submissions") || "[]");
+        adminTable.innerHTML = data
+          .map(
+            (d) =>
+              `<tr><td>${d.name}</td><td>${d.matricule}</td><td>${d.group}</td><td>${d.minigroup}</td></tr>`
+          )
+          .join("");
+      }
+
+      document.getElementById("clearData").addEventListener("click", () => {
+        if (confirm("Are you sure?")) {
+          localStorage.removeItem("submissions");
+          showAdminData();
+        }
+      });
+    </script>
+  </body>
+</html>
